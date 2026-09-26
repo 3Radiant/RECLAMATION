@@ -55,7 +55,6 @@ function Camera.new()
     end
     
     function Camera:Update()
-        
         self:UpdateCFrame()
     end
 

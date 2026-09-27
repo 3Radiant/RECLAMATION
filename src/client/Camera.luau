@@ -3,8 +3,9 @@ local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
+local Config = require(ReplicatedStorage.Shared.Configs.Config)
+
 local Player = Players.LocalPlayer
-local Character = Player.Character or Player.CharacterAdded:Wait()
 
 local CurrentCamera = game.Workspace.CurrentCamera
 
@@ -14,6 +15,8 @@ Camera.__index = Camera
 function Camera.new()
     local self = {
         CFrame = CFrame.new(),
+        MinimumZoomDistance = Config.MinimumZoomDistance,
+        MaximumZoomDistance = Config.MaximumZoomDistance,
         Zoom = Vector3.new(0,0,5),
         HeadOffset = Vector3.new(0,1.5,0),
         FieldOfView = 70,
@@ -29,13 +32,38 @@ function Camera.new()
         end
 
         if Input.UserInputType == Enum.UserInputType.MouseWheel then
-            local NewZoom = math.clamp((self.Zoom.Z - Input.Position.Z), 3, 80)
+            local NewZoom = math.clamp((self.Zoom.Z - Input.Position.Z), self.MinimumZoomDistance, self.MaximumZoomDistance)
             self.Zoom = Vector3.new(0, 0, NewZoom)
         end
     end)
 
+    function Camera:SetMouseEnabled(Enabled)
+        if Enabled == true then
+            UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+        elseif Enabled == false then
+            UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+        else
+            UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+        end
+    end 
+
+    function Camera:UpdateOffset(NewOffset)
+        self.HeadOffset = NewOffset
+    end
+
+    function Camera:UpdateZooms(MinZoom, MaxZoom)
+        self.MinimumZoomDistance = MinZoom
+        self.MaximumZoomDistance = MaxZoom
+    end
+
     function Camera:UpdateCFrame()
-        local HumanoidRootPartPosition = Character:WaitForChild("HumanoidRootPart").Position
+        local Character = Player.Character
+        if Character == nil then
+            return
+        end
+
+        local PrimaryPartPosition = Character.PrimaryPart.Position
+        print(Character, Character.PrimaryPart)    
         local MouseDelta = UserInputService:GetMouseDelta() * 0.01
         local PreviousCFrame = self.CFrame
 
@@ -46,7 +74,7 @@ function Camera.new()
 
         local Rotation = CFrame.fromOrientation(NewX, NewY, 0)
 
-        self.CFrame = Rotation * CFrame.new(self.Zoom) + self.HeadOffset + HumanoidRootPartPosition
+        self.CFrame = Rotation * CFrame.new(self.Zoom) + self.HeadOffset + PrimaryPartPosition
         CurrentCamera.CFrame = self.CFrame
     end 
 

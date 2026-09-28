@@ -40,8 +40,6 @@ function Camera.new()
     function Camera:SetMouseEnabled(Enabled)
         if Enabled == true then
             UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
-        elseif Enabled == false then
-            UserInputService.MouseBehavior = Enum.MouseBehavior.Default
         else
             UserInputService.MouseBehavior = Enum.MouseBehavior.Default
         end
@@ -56,6 +54,15 @@ function Camera.new()
         self.MaximumZoomDistance = MaxZoom
     end
 
+    function Camera:AlignCharacter()
+        local YOrientation, XOrientation, ZOrientation = self.CFrame:ToOrientation()
+        local HumanoidRootPart = Player.Character:FindFirstChild("HumanoidRootPart")
+
+        if HumanoidRootPart then
+            HumanoidRootPart.CFrame = CFrame.new(HumanoidRootPart.Position) * CFrame.fromOrientation(0, XOrientation, 0)
+        end
+    end
+
     function Camera:UpdateCFrame()
         local Character = Player.Character
         if Character == nil then
@@ -63,7 +70,6 @@ function Camera.new()
         end
 
         local PrimaryPartPosition = Character.PrimaryPart.Position
-        print(Character, Character.PrimaryPart)    
         local MouseDelta = UserInputService:GetMouseDelta() * 0.01
         local PreviousCFrame = self.CFrame
 
@@ -84,11 +90,31 @@ function Camera.new()
     
     function Camera:Update()
         self:UpdateCFrame()
+
+        if game.Players.LocalPlayer.Character == game.Workspace:FindFirstChild("ArmoredTitan") then
+            self:AlignCharacter() -- temporary test line to see if works
+        end
     end
 
     RunService.RenderStepped:Connect(function(deltatime)
         self:Update()
     end)
+
+    function Camera:GetCFrame()
+        return self.CFrame
+    end
+
+    function Camera:GetZoom()
+        return self.Zoom
+    end
+
+    function Camera:GetHeadOffset()
+        return self.HeadOffset
+    end
+
+    function Camera:GetFieldOfView()
+        return self.FieldOfView
+    end
 
     setmetatable(self, Camera)
 

@@ -9,9 +9,14 @@ local Events = ReplicatedStorage.Events
 local ShiftTest = Events.ShiftTest
 
 ShiftTest.OnServerEvent:Connect(function(player)
-    local currentshifter = ShifterBase.new()
-    currentshifter:Inherit(player)
-    currentshifter.Model = game.ServerStorage.Titans.ArmoredTitan
+    ShifterBase:Inherit(player)
+    ShifterBase.Model = game.ServerStorage.Titans.ArmoredTitan
 
-    currentshifter:Shift(player)
+    local Shifted = ShifterBase.Shifted
+    
+    if Shifted == false then
+        ShifterBase:Shift(player)
+    else
+        ShifterBase:Deshift(player)
+    end
 end)

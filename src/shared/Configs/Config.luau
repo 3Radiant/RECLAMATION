@@ -4,7 +4,7 @@ local Config = {
     RunWalkSpeed = 20,
 
     -- Normal camera offset
-    NormalCameraOffset = Vector3.new(0, 2.5, 0),
+    NormalCameraOffset = Vector3.new(0, 1.5, 0),
     ShifterCameraOffset = Vector3.new(0, 65, 0),
 
     MaximumZoomDistance = 30,

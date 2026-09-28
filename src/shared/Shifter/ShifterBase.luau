@@ -1,6 +1,10 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
 
 local Config = require(ReplicatedStorage.Shared.Configs.Config)
+
+local CameraEvent = ReplicatedStorage.Events.CameraEvent
+
 
 local ShifterBase = {}
 ShifterBase.__index = ShifterBase
@@ -28,41 +32,25 @@ end
 
 function ShifterBase:Shift(ShiftingPlayer)
     if self.ShiftCount <= self.MaxShifts and ShiftingPlayer == self.Inheritor and self.Shifted == false then
-        
-
+    
         self.ShiftCount = self.ShiftCount + 1
         self.Shifted = true
+        print(self.Shifted)
         self.State = "Idle"
 
         local TitanClone = self.Model:Clone()
-
         local InheritorCharacter = self.Inheritor.Character
+        InheritorCharacter.Archivable = true
+        local InheritorCharacterClone = InheritorCharacter:Clone()
 
-        --[[for _, CharacterChild in InheritorCharacter:GetChildren() do
-            if CharacterChild:IsA("Accessory") then
-                if CharacterChild.AccessoryType == Enum.AccessoryType.Hair then
-                    local HairClone = CharacterChild:Clone()
-                    HairClone.Parent = TitanClone
-
-                    local HairScale = (TitanClone.Head.Size.Y) / (InheritorCharacter.Head.Size)
-                    HairClone.Handle.Size *= HairScale
-                    HairClone.Handle.HairAttachment.Position *= HairScale
-                end
-            end
-        end]]
-
-        InheritorCharacter.Parent = ReplicatedStorage
+        InheritorCharacterClone.Parent = ReplicatedStorage.ShifterCharacters
         TitanClone.Parent = game.Workspace
         TitanClone.PrimaryPart.CFrame = InheritorCharacter.PrimaryPart.CFrame * CFrame.new(0, 150, 0)
         TitanClone.PrimaryPart:SetNetworkOwner(self.Inheritor)
         self.Inheritor.Character = TitanClone
         
-        local camevent = ReplicatedStorage.Events.CameraEvent
-        camevent:FireClient(ShiftingPlayer)
+        CameraEvent:FireClient(ShiftingPlayer, true)
 
-        --local TitanCamera = require(ShiftingPlayer.PlayerScripts.Client.Camera)
-       -- TitanCamera:UpdateOffset(Config.ShifterCameraOffset)
-        --TitanCamera:UpdateZooms(Config.ShifterMinimumZoomDistance, Config.ShifterMaximumZoomDistance)
         print("logic should also go here where u prolly fire remoteevent to shift stuff")
     else
         warn("Max shifts reached")
@@ -81,9 +69,19 @@ function ShifterBase:ChangeState(NewState)
     self.CurrentState = NewState
 end
 
-function ShifterBase:Deshift()
+function ShifterBase:Deshift(ShiftingPlayer)
+    print("Deshift function called for player: ", ShiftingPlayer.Name)
     self.Shifted = false
     self.State = nil
+
+    local InheritorCharacter = ReplicatedStorage.ShifterCharacters:FindFirstChild(ShiftingPlayer.Name)
+    InheritorCharacter.Parent = game.Workspace
+    InheritorCharacter.PrimaryPart:SetNetworkOwner(ShiftingPlayer)
+    InheritorCharacter.PrimaryPart.CFrame = ShiftingPlayer.Character.PrimaryPart.CFrame * CFrame.new(0, 20, 0)
+    ShiftingPlayer.Character:Destroy()
+    ShiftingPlayer.Character = InheritorCharacter
+
+    CameraEvent:FireClient(ShiftingPlayer, false)
 end
 
-return ShifterBase
+return ShifterBase.new()

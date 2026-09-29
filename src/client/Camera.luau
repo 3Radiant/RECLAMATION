@@ -18,7 +18,7 @@ function Camera.new()
         MinimumZoomDistance = Config.MinimumZoomDistance,
         MaximumZoomDistance = Config.MaximumZoomDistance,
         Zoom = Vector3.new(0,0,5),
-        HeadOffset = Vector3.new(0,1.5,0),
+        HeadOffset = Vector3.new(0,0,0),
         FieldOfView = 70,
 
     }
@@ -111,10 +111,7 @@ function Camera.new()
     function Camera:GetHeadOffset()
         return self.HeadOffset
     end
-
-    function Camera:GetFieldOfView()
-        return self.FieldOfView
-    end
+    
 
     setmetatable(self, Camera)
 

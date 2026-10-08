@@ -1,22 +1,13 @@
 local AnimationHandler = {}
 
-function AnimationHandler:PreloadAnimations(Character, AnimationIds)
-    local Humanoid = Character:FindFirstChildOfClass("Humanoid")
-    if Humanoid then
-        for _, AnimationId in pairs(AnimationIds) do
-            local Animation = Instance.new("Animation")
-            Animation.AnimationId = AnimationId
-            Humanoid:LoadAnimation(Animation)
-        end
-    end
-end
+-- FIX THIS SHITTY SCRIPT CUZ ITS BROKEN 
 
 function AnimationHandler:PlayAnimation(Character, AnimationId)
     local Humanoid = Character:FindFirstChildOfClass("Humanoid")
     if Humanoid then
-        local Animation = Instance.new("Animation")
-        Animation.AnimationId =  AnimationId
-        local AnimationTrack = Humanoid:LoadAnimation(Animation)
+        --local Animation = Instance.new("Animation")
+        --Animation.AnimationId =  AnimationId
+        local AnimationTrack = Humanoid.Animator:LoadAnimation(AnimationId)
         AnimationTrack:Play()
 
         return AnimationTrack

@@ -21,5 +21,7 @@ UserInputService.InputBegan:Connect(function(Input, GPE)
         task.wait(Anim.Length - 0.05)
 
         ShiftTest:FireServer(player)
+        local CharacterController = require(ReplicatedStorage.Shared.CharacterController)
+        CharacterController:Change_Character()
     end
 end)

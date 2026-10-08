@@ -49,6 +49,8 @@ function ShifterBase:Shift(ShiftingPlayer)
         TitanClone.PrimaryPart:SetNetworkOwner(self.Inheritor)
         self.Inheritor.Character = TitanClone
         
+        local CharacterController = require(ReplicatedStorage.Shared.CharacterController)
+        CharacterController:Change_Character()
         CameraEvent:FireClient(ShiftingPlayer, true)
 
         print("logic should also go here where u prolly fire remoteevent to shift stuff")

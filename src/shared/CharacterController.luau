@@ -1,19 +1,29 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
 local LocalPlayer = Players.LocalPlayer
 
 local AnimationHandler = require(ReplicatedStorage.Shared.AnimationHandler)
 
+local Animations = ReplicatedStorage.Animations
+local R15_Animations = Animations.R15
+
+
 local CharacterController = {}
 CharacterController.__index = CharacterController
-
 
 local MovementStates = {
     "Crouching",
     "Walking",
     "Sprinting",
+}
+
+local StateTable = {
+    Jumping = Enum.HumanoidStateType.Jumping,
+    Swimming = Enum.HumanoidStateType.Swimming,
+    Falling = Enum.HumanoidStateType.Freefall,
 }
 
 function CharacterController.new()
@@ -36,9 +46,9 @@ function CharacterController.new()
 end
 
 function CharacterController:Change_Character()
-    LocalPlayer.Character = self.Character
-    self.Humanoid = self.Character:WaitForChild("Humanoid")
-    self.Animator = self.Humanoid:WaitForChild("Animator")
+    self.Character = LocalPlayer.Character
+    self.Humanoid = LocalPlayer.Character:WaitForChild("Humanoid")
+    self.Animator = LocalPlayer.Character.Humanoid:WaitForChild("Animator")
 end
 
 function CharacterController:Change_State(NewState)
@@ -74,10 +84,54 @@ function CharacterController:Update_Animation()
     AnimationHandler:PlayAnimation(self.Character, self.CurrentAnimation.Animation.AnimationId)
 end
 
-function CharacterController:Get_State()
-    return self.State
+function CharacterController:Get_Character()
+    return LocalPlayer.Character -- self.character this what it should be but the self.character isnt set properly for soe reason
 end
 
+function CharacterController:Get_Humanoid()
+    return LocalPlayer.Character.Humanoid
+end
+
+function CharacterController:Get_Running_Value()
+    return self.State == "Running"
+end
+
+function CharacterController:Get_Walking_Value()
+    return self.State == "Walking"
+end
+
+function CharacterController:Get_Crouching_Value()
+    return self.State == "Crouching"
+end
+
+--User
+
+RunService.RenderStepped:Connect(function(DeltaTime)
+    print(CharacterController:Get_Humanoid())
+    local Humanoid = CharacterController:Get_Humanoid()
+    local MoveDirection = Humanoid.MoveDirection
+
+    if (MoveDirection.Magnitude) <= 0 then
+        AnimationHandler:PlayAnimation(CharacterController:Get_Character(), require(R15_Animations.IDs).idle)
+        return
+    end
+
+    if MoveDirection.Magnitude > 0 then
+        if CharacterController:Get_Walking_Value() == true then
+            local anim = AnimationHandler:PlayAnimation(LocalPlayer.Character, require(R15_Animations.IDs).walk) -- FIGURE OTU WHY GET FUNCTONS WONT WORK OR R RETURNING NIL
+            CharacterController:Change_Animation(anim)
+        elseif CharacterController:Get_Running_Value() == true then
+            local anim = AnimationHandler:PlayAnimation(LocalPlayer.Character, require(R15_Animations.IDs).run)
+            CharacterController:Change_Animation(anim)
+        elseif CharacterController:Get_Crouching_Value() == true then
+            local anim = AnimationHandler:PlayAnimation(LocalPlayer.Character, require(R15_Animations.IDs).crouch)
+            CharacterController:Change_Animation(anim)
+        end
+    end
+
+    CharacterController:Update_Animation()
+end)
 
 
 
+return CharacterController.new()

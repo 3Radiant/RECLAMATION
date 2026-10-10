@@ -5,11 +5,12 @@ local UserInputService = game:GetService("UserInputService")
 
 local LocalPlayer = Players.LocalPlayer
 
-local AnimationHandler = require(ReplicatedStorage.Shared.AnimationHandler)
+local Configs = ReplicatedStorage.Shared.Configs
+local Config = require(ReplicatedStorage.Shared.Configs.Config)
+local AnimationConfigs = require(Configs.AnimationConfigs)
 
-local Animations = ReplicatedStorage.Animations
-local R15_Animations = Animations.R15
-
+local R6_Animation_IDs = AnimationConfigs.R6_Animations
+local R15_Animation_IDs = AnimationConfigs.R15_Animations
 
 local CharacterController = {}
 CharacterController.__index = CharacterController
@@ -33,7 +34,9 @@ function CharacterController.new()
         Animator = nil,
 
         CurrentAnimation = nil,
-        State = nil,
+        Animations = {},
+
+        State = "Idle",
 
         Health = 100,
         WalkSpeed = 16,
@@ -42,13 +45,39 @@ function CharacterController.new()
     }
 
     setmetatable(self, CharacterController)
+
+    RunService.RenderStepped:Connect(function(DeltaTime)
+        self:Update()
+    end)
+
     return self
 end
 
 function CharacterController:Change_Character()
+    print(LocalPlayer.Character)
     self.Character = LocalPlayer.Character
-    self.Humanoid = LocalPlayer.Character:WaitForChild("Humanoid")
-    self.Animator = LocalPlayer.Character.Humanoid:WaitForChild("Animator")
+    self.Humanoid = self.Character:WaitForChild("Humanoid")
+    self.Animator = self.Humanoid:WaitForChild("Animator")
+
+    if self.Humanoid.RigType == Enum.HumanoidRigType.R6 then
+        for index, AnimationId in R6_Animation_IDs do 
+            local AnimationInstance = Instance.new("Animation")
+            AnimationInstance.AnimationId = "rbxassetid://"..tostring(AnimationId)
+            local AnimationTrack = self.Animator:LoadAnimation(AnimationInstance)
+            self.Animations[index] = AnimationTrack 
+        end
+
+    elseif self.Humanoid.RigType == Enum.HumanoidRigType.R15 then
+        for index, AnimationId in R15_Animation_IDs do
+            print(index)
+            local AnimationInstance = Instance.new("Animation")
+            AnimationInstance.AnimationId = "rbxassetid://"..tostring(AnimationId)
+            local AnimationTrack = self.Animator:LoadAnimation(AnimationInstance)
+            self.Animations[index] = AnimationTrack 
+        end
+    end
+
+    self:Update_Walkspeed()
 end
 
 function CharacterController:Change_State(NewState)
@@ -72,24 +101,30 @@ function CharacterController:Change_State(NewState)
     self:Update_Walkspeed()
 end
 
-function CharacterController:Change_Animation(AnimationTrack)
-    self.CurrentAnimation = AnimationTrack
+function CharacterController:Change_Animation(Key)
+    if self.CurrentAnimation ~= nil and self.CurrentAnimation ~= self.Animations[Key] then
+        self.CurrentAnimation:Stop()
+    end
+
+    self.CurrentAnimation = self.Animations[Key]
+
+    if self.CurrentAnimation == nil or self.CurrentAnimation.IsPlaying == true then
+        return
+    end
+
+    self.CurrentAnimation:Play(Config.Animation_Fade_Time)
 end
 
 function CharacterController:Update_Walkspeed()
     self.Humanoid.WalkSpeed = self.WalkSpeed
 end
 
-function CharacterController:Update_Animation()
-    AnimationHandler:PlayAnimation(self.Character, self.CurrentAnimation.Animation.AnimationId)
-end
-
 function CharacterController:Get_Character()
-    return LocalPlayer.Character -- self.character this what it should be but the self.character isnt set properly for soe reason
+    return self.Character -- self.character this what it should be but the self.character isnt set properly for soe reason
 end
 
 function CharacterController:Get_Humanoid()
-    return LocalPlayer.Character.Humanoid
+    return self.Humanoid
 end
 
 function CharacterController:Get_Running_Value()
@@ -104,34 +139,28 @@ function CharacterController:Get_Crouching_Value()
     return self.State == "Crouching"
 end
 
---User
-
-RunService.RenderStepped:Connect(function(DeltaTime)
-    print(CharacterController:Get_Humanoid())
-    local Humanoid = CharacterController:Get_Humanoid()
+function CharacterController:Update()
+    local Humanoid = self:Get_Humanoid()
     local MoveDirection = Humanoid.MoveDirection
 
-    if (MoveDirection.Magnitude) <= 0 then
-        AnimationHandler:PlayAnimation(CharacterController:Get_Character(), require(R15_Animations.IDs).idle)
-        return
+    if (MoveDirection.Magnitude) == 0 then
+        self:Change_State("Idle")
+        self:Change_Animation("idle")
     end
 
     if MoveDirection.Magnitude > 0 then
-        if CharacterController:Get_Walking_Value() == true then
-            local anim = AnimationHandler:PlayAnimation(LocalPlayer.Character, require(R15_Animations.IDs).walk) -- FIGURE OTU WHY GET FUNCTONS WONT WORK OR R RETURNING NIL
-            CharacterController:Change_Animation(anim)
-        elseif CharacterController:Get_Running_Value() == true then
-            local anim = AnimationHandler:PlayAnimation(LocalPlayer.Character, require(R15_Animations.IDs).run)
-            CharacterController:Change_Animation(anim)
-        elseif CharacterController:Get_Crouching_Value() == true then
-            local anim = AnimationHandler:PlayAnimation(LocalPlayer.Character, require(R15_Animations.IDs).crouch)
-            CharacterController:Change_Animation(anim)
-        end
+        self:Change_Animation("walk")
     end
+end
 
-    CharacterController:Update_Animation()
+UserInputService.InputBegan:Connect(function(Input, GPE)
+    if Input.KeyCode == Enum.KeyCode.LeftShift then
+        print("shift being poressed")
+        CharacterController:Change_State("Running")
+        print("state SHOULD be changed")
+    --elseif Input.KeyCode == Enum.KeyCode.LeftControl then
+       -- CharacterController:Change_State("Crouching")
+    end
 end)
-
-
 
 return CharacterController.new()

@@ -3,7 +3,8 @@ local Config = {
     BaseWalkSpeed = 12,
     RunWalkSpeed = 20,
 
-    -- Normal camera offset
+    Animation_Fade_Time = 0.3,
+
     NormalCameraOffset = Vector3.new(0, 0, 0),
     ShifterCameraOffset = Vector3.new(0, 65, 0),
 

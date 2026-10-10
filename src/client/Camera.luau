@@ -69,6 +69,10 @@ function Camera.new()
             return
         end
 
+        if Character.PrimaryPart == nil then
+            return
+        end
+
         local PrimaryPartPosition = Character.PrimaryPart.Position
         local MouseDelta = UserInputService:GetMouseDelta() * 0.01
         local PreviousCFrame = self.CFrame

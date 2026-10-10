@@ -5,6 +5,8 @@ local Shared = ReplicatedStorage.Shared
 local Shifter = Shared.Shifter
 local ShifterBase = require(Shifter.ShifterBase)
 
+local CharacterController = require(ReplicatedStorage.Shared.CharacterController)
+
 local Events = ReplicatedStorage.Events
 local ShiftTest = Events.ShiftTest
 
@@ -15,13 +17,16 @@ UserInputService.InputBegan:Connect(function(Input, GPE)
 
     if Input.KeyCode == Enum.KeyCode.P then
         local player = game.Players.LocalPlayer --make betetr when u come back to 
-        local AnimationController = require(ReplicatedStorage.Shared.AnimationHandler)
-        local Anim = AnimationController:PlayAnimation(player.Character, game.ReplicatedStorage.Animations.R6.BiteHand.AnimationId)
+        
+        CharacterController:Change_Animation("bitehand")
 
-        task.wait(Anim.Length - 0.05)
+        task.wait(CharacterController.Animations.bitehand.Length - 0.05)
 
         ShiftTest:FireServer(player)
-        local CharacterController = require(ReplicatedStorage.Shared.CharacterController)
         CharacterController:Change_Character()
     end
+end)
+
+ShiftTest.OnClientEvent:Connect(function()
+    CharacterController:Change_Character()
 end)

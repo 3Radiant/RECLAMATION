@@ -4,6 +4,7 @@ local ServerStorage = game:GetService("ServerStorage")
 local Config = require(ReplicatedStorage.Shared.Configs.Config)
 
 local CameraEvent = ReplicatedStorage.Events.CameraEvent
+local ShiftTest = ReplicatedStorage.Events.ShiftTest
 
 
 local ShifterBase = {}
@@ -15,6 +16,7 @@ function ShifterBase.new()
         Inheritor = nil, -- will be player of titan
         Model = nil, -- will be titan model
         CurrentState = "Idle", --potentially change this to be a state table
+        ShifterScale = 1, -- change shifterscale based on each shifter's subclass
         ShiftCount = 0,
         MaxShifts = 3,
         Shifted = false,
@@ -49,8 +51,7 @@ function ShifterBase:Shift(ShiftingPlayer)
         TitanClone.PrimaryPart:SetNetworkOwner(self.Inheritor)
         self.Inheritor.Character = TitanClone
         
-        local CharacterController = require(ReplicatedStorage.Shared.CharacterController)
-        CharacterController:Change_Character()
+        ShiftTest:FireClient(ShiftingPlayer)
         CameraEvent:FireClient(ShiftingPlayer, true)
 
         print("logic should also go here where u prolly fire remoteevent to shift stuff")

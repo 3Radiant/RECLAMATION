@@ -9,6 +9,8 @@ local Configs = ReplicatedStorage.Shared.Configs
 local Config = require(ReplicatedStorage.Shared.Configs.Config)
 local AnimationConfigs = require(Configs.AnimationConfigs)
 
+local Camera = require(LocalPlayer.PlayerScripts.Client.Camera)
+
 local R6_Animation_IDs = AnimationConfigs.R6_Animations
 local R15_Animation_IDs = AnimationConfigs.R15_Animations
 
@@ -18,7 +20,7 @@ CharacterController.__index = CharacterController
 local MovementStates = {
     "Crouching",
     "Walking",
-    "Sprinting",
+    "Running",
 }
 
 local StateTable = {
@@ -39,7 +41,7 @@ function CharacterController.new()
         State = "Idle",
 
         Health = 100,
-        WalkSpeed = 16,
+        WalkSpeed = 10,
         JumpHeight = 7.2,
 
     }
@@ -50,13 +52,41 @@ function CharacterController.new()
         self:Update()
     end)
 
+    UserInputService.InputBegan:Connect(function(Input, GPE)
+        if Input.KeyCode == Enum.KeyCode.LeftShift then
+            self:Change_State("Running")
+    
+        elseif Input.KeyCode == Enum.KeyCode.LeftControl then
+           self:Change_State("Crouching")
+        end
+    end)
+    
+    UserInputService.InputEnded:Connect(function(Input, GPE)
+        if Input.KeyCode == Enum.KeyCode.LeftShift then
+            if self:Get_Humanoid().MoveDirection.Magnitude > 0 then
+                print("state should be walking")
+                self:Change_State("Walking")
+            else
+                print("state should be idle")
+                self:Change_State("Idle")
+            end
+    
+        elseif Input.KeyCode == Enum.KeyCode.LeftControl then
+            if (self:Get_Humanoid().MoveDirection.Magnitude) > 0 then
+                self:Change_State("Walking")
+            else
+                self:Change_State("Idle")
+            end
+        end
+    end)
+
     return self
 end
 
 function CharacterController:Change_Character()
     print(LocalPlayer.Character)
-    self.Character = LocalPlayer.Character
-    self.Humanoid = self.Character:WaitForChild("Humanoid")
+    self.Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    self.Humanoid = self.Character:WaitForChild("Humanoid", 30)
     self.Animator = self.Humanoid:WaitForChild("Animator")
 
     if self.Humanoid.RigType == Enum.HumanoidRigType.R6 then
@@ -88,14 +118,16 @@ function CharacterController:Change_State(NewState)
     self.State = NewState
 
     if NewState == "Crouching" then
-        self.WalkSpeed = 8 -- have configs that change ws depending on shifter/nnonshfiter
+        self.WalkSpeed = 9 -- have configs that change ws depending on shifter/nnonshfiter
+        Camera:UpdateFOV(70)
         
     elseif NewState == "Walking" then
-        self.WalkSpeed = 16
+        self.WalkSpeed = 12
+        Camera:UpdateFOV(70)
 
     elseif NewState == "Running" then
-        self.WalkSpeed = 30
-
+        self.WalkSpeed = 26
+        Camera:UpdateFOV(80)
     end
 
     self:Update_Walkspeed()
@@ -116,7 +148,8 @@ function CharacterController:Change_Animation(Key)
 end
 
 function CharacterController:Update_Walkspeed()
-    self.Humanoid.WalkSpeed = self.WalkSpeed
+    print(self.WalkSpeed)
+    LocalPlayer.Character.Humanoid.WalkSpeed = self.WalkSpeed
 end
 
 function CharacterController:Get_Character()
@@ -142,25 +175,32 @@ end
 function CharacterController:Update()
     local Humanoid = self:Get_Humanoid()
     local MoveDirection = Humanoid.MoveDirection
+    local State_Animation = "idle"
 
     if (MoveDirection.Magnitude) == 0 then
         self:Change_State("Idle")
-        self:Change_Animation("idle")
+        State_Animation = "idle"
     end
 
     if MoveDirection.Magnitude > 0 then
-        self:Change_Animation("walk")
-    end
-end
+        if not self:Get_Running_Value() and not self:Get_Crouching_Value() then
+            State_Animation = "walk"
+        end
 
-UserInputService.InputBegan:Connect(function(Input, GPE)
-    if Input.KeyCode == Enum.KeyCode.LeftShift then
-        print("shift being poressed")
-        CharacterController:Change_State("Running")
-        print("state SHOULD be changed")
-    --elseif Input.KeyCode == Enum.KeyCode.LeftControl then
-       -- CharacterController:Change_State("Crouching")
+        if self:Get_Running_Value() == true and not self:Get_Crouching_Value() then
+            --print("should be running")
+            State_Animation = "run"
+        elseif self:Get_Crouching_Value() == true and not self:Get_Running_Value() then
+            --print("should be crouching")
+            State_Animation = "crouch"
+        end
     end
-end)
+
+    if Humanoid.FloorMaterial == Enum.Material.Air or Humanoid:GetState() == Enum.HumanoidStateType.Freefall then
+        State_Animation = "fall"
+    end
+
+    self:Change_Animation(State_Animation)
+end
 
 return CharacterController.new()

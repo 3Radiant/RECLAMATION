@@ -2,6 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage.Shared.Configs.Config)
 
@@ -90,6 +91,11 @@ function Camera.new()
 
     function Camera:UpdateFOV(NewFov)
         self.FieldOfView = NewFov
+
+        local FOVTweenInfo = TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, 0)
+        local FOVTween = TweenService:Create(CurrentCamera, FOVTweenInfo, { FieldOfView = self.FieldOfView })
+
+        FOVTween:Play()
     end
     
     function Camera:Update()

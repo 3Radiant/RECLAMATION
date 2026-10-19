@@ -7,12 +7,12 @@ local LocalPlayer = Players.LocalPlayer
 
 local Configs = ReplicatedStorage.Shared.Configs
 local Config = require(ReplicatedStorage.Shared.Configs.Config)
-local AnimationConfigs = require(Configs.AnimationConfigs)
+local AnimationConfigs = require(Configs.AnimationConfigs) -- modulescript containing ALL animation IDs, R6/R15
 
 local Camera = require(LocalPlayer.PlayerScripts.Client.Camera)
 
-local R6_Animation_IDs = AnimationConfigs.R6_Animations
-local R15_Animation_IDs = AnimationConfigs.R15_Animations
+local R6_Animation_IDs = AnimationConfigs.R6_Animations -- R6 section of modulescript
+local R15_Animation_IDs = AnimationConfigs.R15_Animations -- r15 section of modulescript
 
 local CharacterController = {}
 CharacterController.__index = CharacterController
@@ -23,7 +23,7 @@ local MovementStates = {
     "Running",
 }
 
-local StateTable = {
+local StateTable = { -- wtf is this for?
     Jumping = Enum.HumanoidStateType.Jumping,
     Swimming = Enum.HumanoidStateType.Swimming,
     Falling = Enum.HumanoidStateType.Freefall,
@@ -53,21 +53,32 @@ function CharacterController.new()
     end)
 
     UserInputService.InputBegan:Connect(function(Input, GPE)
+        if GPE then
+            return
+        end
+
         if Input.KeyCode == Enum.KeyCode.LeftShift then
             self:Change_State("Running")
     
         elseif Input.KeyCode == Enum.KeyCode.LeftControl then
            self:Change_State("Crouching")
         end
+        
+        if Input.KeyCode == Enum.KeyCode.J then
+            self:Change_Attribute("Health", 100)
+            print(self.Health)
+        end
     end)
     
     UserInputService.InputEnded:Connect(function(Input, GPE)
+        if GPE then
+            return
+        end
+        
         if Input.KeyCode == Enum.KeyCode.LeftShift then
             if self:Get_Humanoid().MoveDirection.Magnitude > 0 then
-                print("state should be walking")
                 self:Change_State("Walking")
             else
-                print("state should be idle")
                 self:Change_State("Idle")
             end
     
@@ -81,6 +92,16 @@ function CharacterController.new()
     end)
 
     return self
+end
+
+function CharacterController:Change_Attribute(Attribute, Value)
+    if not self[Attribute] then
+        warn("self[Attribute] returns nil")
+        warn("Tryna change the val of an attribute of object that dont exist")
+        return
+    end
+
+    self[Attribute] = Value
 end
 
 function CharacterController:Change_Character()
@@ -118,15 +139,15 @@ function CharacterController:Change_State(NewState)
     self.State = NewState
 
     if NewState == "Crouching" then
-        self.WalkSpeed = 9 -- have configs that change ws depending on shifter/nnonshfiter
+        self:Change_Attribute("WalkSpeed", 9) -- have configs that change ws depending on shifter/nnonshfiter
         Camera:UpdateFOV(70)
         
     elseif NewState == "Walking" then
-        self.WalkSpeed = 12
+        self:Change_Attribute("WalkSpeed", 12)
         Camera:UpdateFOV(70)
 
     elseif NewState == "Running" then
-        self.WalkSpeed = 26
+        self:Change_Attribute("WalkSpeed", 26)
         Camera:UpdateFOV(80)
     end
 
@@ -147,13 +168,26 @@ function CharacterController:Change_Animation(Key)
     self.CurrentAnimation:Play(Config.Animation_Fade_Time)
 end
 
+function CharacterController:PlayAnimation(Key, Animation_Id) -- idea of this function isto play anims that might not be looked at or overlooked in base anims
+    if self.Animations[Key] then
+        self.Animations[Key]:Play()
+        return
+    end
+
+    local AnimationInstance = Instance.new("Animation")
+    AnimationInstance.AnimationId = Animation_Id
+    local AnimationTrack = self.Animator:LoadAnimation(AnimationInstance)
+    self.Animations[Key] = AnimationTrack
+    AnimationTrack:Play() -- u might not need this, if you call :PlayAnimation again, its like a recursive function where itll do the self.Aniamtions check, but keep for now
+end
+
 function CharacterController:Update_Walkspeed()
     print(self.WalkSpeed)
     LocalPlayer.Character.Humanoid.WalkSpeed = self.WalkSpeed
 end
 
 function CharacterController:Get_Character()
-    return self.Character -- self.character this what it should be but the self.character isnt set properly for soe reason
+    return self.Character
 end
 
 function CharacterController:Get_Humanoid()

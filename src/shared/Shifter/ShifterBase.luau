@@ -87,4 +87,8 @@ function ShifterBase:Deshift(ShiftingPlayer)
     CameraEvent:FireClient(ShiftingPlayer, false)
 end
 
+function ShifterBase:GetModel()
+    return self.Model
+end
+
 return ShifterBase.new()

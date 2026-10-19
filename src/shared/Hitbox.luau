@@ -1,7 +1,8 @@
 local Hitbox = {}
 
-function Hitbox.CreateHitbox(Parent, Part, Size, Position)
+function Hitbox:CreateHitbox(Part, Size, Position)
     local HitboxPart = Instance.new("Part")
+    HitboxPart.Parent = game.Workspace["Hitboxes"]
     HitboxPart.Size = Size
     HitboxPart.Position = Position
     HitboxPart.Anchored = true
@@ -18,13 +19,13 @@ function Hitbox.CreateHitbox(Parent, Part, Size, Position)
     return HitboxPart
 end
 
-function Hitbox.DestroyHitbox(HitboxPart)
+function Hitbox:DestroyHitbox(HitboxPart)
     if HitboxPart and HitboxPart.Parent then
         HitboxPart:Destroy()
     end
 end
 
-function Hitbox.GetHumanoidsInHitbox(HitboxPart)
+function Hitbox:GetHumanoidsInHitbox(HitboxPart)
     local Humanoids = {}
     for _, Character in pairs(game.Workspace:GetChildren()) do
         if Character:IsA("Model") and Character:FindFirstChild("Humanoid") then

@@ -104,6 +104,16 @@ function CharacterController:Change_Attribute(Attribute, Value)
     self[Attribute] = Value
 end
 
+function CharacterController:Get_Attribute(Attribute)
+    if not self[Attribute] then
+        warn("self[Attribute] returns nil")
+        warn("Tryna change the val of an attribute of object that dont exist")
+        return
+    end
+
+    return self[Attribute]
+end
+
 function CharacterController:Change_Character()
     print(LocalPlayer.Character)
     self.Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()

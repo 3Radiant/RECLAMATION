@@ -29,6 +29,8 @@ local StateTable = { -- wtf is this for?
     Falling = Enum.HumanoidStateType.Freefall,
 }
 
+-- PLEASE MAKE A GLOBALIZED STATE TABLE IN REP STORAGE
+
 function CharacterController.new()
     local self = {
         Character = nil,

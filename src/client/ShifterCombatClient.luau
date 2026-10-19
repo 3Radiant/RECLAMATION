@@ -10,6 +10,8 @@ local ShifterBase = require(ShifterFolder.ShifterBase)
 local Hitbox = require(ReplicatedStorage.Shared.Hitbox)
 local CharacterController = require(ReplicatedStorage.Shared.CharacterController)
 
+local Character = CharacterController:Get_Attribute("Character")
+
 local ShifterCombatClient = {}
 ShifterCombatClient.__index = ShifterCombatClient
 
@@ -26,7 +28,13 @@ function ShifterCombatClient.new()
 end
 
 function ShifterCombatClient:M1()
-    CharacterController:PlayAnimation()
+    CharacterController:PlayAnimation("LightAttack", 322323234232) -- replace with anim id
+    
+    local ShifterModelHeight = 30
+    local ShifterModelWidth = 30 -- change to whatever bodyscale things r called
+    local ShifterModelLength = 30
+
+    local HitboxPart = Hitbox:CreateHitbox(Character.PrimaryPart, Vector3.new(ShifterModelLength, ShifterModelHeight, ShifterModelWidth), Character.PrimaryPart.CFrame * CFrame.new(ShifterModelWidth))
 end
 
 return ShifterCombatClient
